@@ -42,14 +42,14 @@ import org.openimaj.ml.annotation.linear.LiblinearAnnotator;
 
 public class Main {
 
-    private static String TRAINING_IMAGES_PATH_PART0 = "/Users/paulochang/Downloads/sketch-to-code/dataset_part0";
-    private static String TRAINER_DATA_FILE_PATH_PART0 = "/Users/paulochang/Downloads/trainer_part0.dat";
+    private static String TRAINING_IMAGES_PATH_PART0 = "/Users/paulochang/Downloads/sketch-to-code/images/dataset_part0";
+    private static String TRAINER_DATA_FILE_PATH_PART0 = "/Users/paulochang/Downloads/sketch-to-code/training_data_files/trainer_part0.dat";
 
-    private static String TRAINING_IMAGES_PATH_PART1 = "/Users/paulochang/Downloads/sketch-to-code/dataset_part1";
-    private static String TRAINER_DATA_FILE_PATH_PART1 = "/Users/paulochang/Downloads/trainer_part2.dat";
+    private static String TRAINING_IMAGES_PATH_PART1 = "/Users/paulochang/Downloads/sketch-to-code/images/dataset_part1";
+    private static String TRAINER_DATA_FILE_PATH_PART1 = "/Users/paulochang/Downloads/sketch-to-code/training_data_files/trainer_part1.dat";
 
-    private static String TRAINING_IMAGES_PATH_PART2 = "/Users/paulochang/Downloads/sketch-to-code/dataset_part2";
-    private static String TRAINER_DATA_FILE_PATH_PART2 = "/Users/paulochang/Downloads/trainer_part1.dat";
+    private static String TRAINING_IMAGES_PATH_PART2 = "/Users/paulochang/Downloads/sketch-to-code/images/dataset_part2";
+    private static String TRAINER_DATA_FILE_PATH_PART2 = "/Users/paulochang/Downloads/sketch-to-code/training_data_files/trainer_part2.dat";
 
 
 
@@ -77,28 +77,28 @@ public class Main {
 
 
             LiblinearAnnotator<FImage, String> trainer = null;
-            File inputDataFile = new File(TRAINER_DATA_FILE_PATH);
+            File inputDataFile = new File(TRAINER_DATA_FILE_PATH_PART0);
             if (inputDataFile.isFile()) {
                 trainer = IOUtils.readFromFile(inputDataFile);
             } else
             {
                 VFSGroupDataset<FImage> allData = null;
                 allData = new VFSGroupDataset<FImage>(
-                        TRAINING_IMAGES_PATH,
+                        TRAINING_IMAGES_PATH_PART0,
                         ImageUtilities.FIMAGE_READER);
 
                 GroupedDataset<String, ListDataset<FImage>, FImage> data =
-                        GroupSampler.sample(allData, 4, false);
+                        GroupSampler.sample(allData, 2, false);
 
                 GroupedRandomSplitter<String, FImage> splits =
-                        new GroupedRandomSplitter<String, FImage>(data, 2, 0, 2); // 15 training, 15 testing
+                        new GroupedRandomSplitter<String, FImage>(data, 3, 0, 3); // 15 training, 15 testing
 
 
                 DenseSIFT denseSIFT = new DenseSIFT(5, 7);
                 PyramidDenseSIFT<FImage> pyramidDenseSIFT = new PyramidDenseSIFT<FImage>(denseSIFT, 6f, 7);
 
                 GroupedDataset<String, ListDataset<FImage>, FImage> sample =
-                        GroupedUniformRandomisedSampler.sample(splits.getTrainingDataset(), 2);
+                        GroupedUniformRandomisedSampler.sample(splits.getTrainingDataset(), 5);
 
                 HardAssigner<byte[], float[], IntFloatPair> assigner = trainQuantiser(sample, pyramidDenseSIFT);
 
@@ -113,13 +113,13 @@ public class Main {
                 Date start = new Date();
                 System.out.println("Classifier training: start");
                 trainer.train(splits.getTrainingDataset());
-                File f = new File(TRAINER_DATA_FILE_PATH);
+                File f = new File(TRAINER_DATA_FILE_PATH_PART0);
                 if (!f.getParentFile().exists())
                     f.getParentFile().mkdirs();
                 if (!f.exists())
                     f.createNewFile();
 
-                IOUtils.writeToFile(trainer, new File(TRAINER_DATA_FILE_PATH));
+                IOUtils.writeToFile(trainer, new File(TRAINER_DATA_FILE_PATH_PART0));
                 System.out.println("Classifier training: end");
                 Date end = new Date();
                 long durationSec = (end.getTime() - start.getTime()) / 1000;
