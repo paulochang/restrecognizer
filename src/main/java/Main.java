@@ -26,6 +26,7 @@ import org.openimaj.ml.clustering.assignment.HardAssigner;
 import org.openimaj.ml.clustering.kmeans.ByteKMeans;
 import org.openimaj.util.pair.IntFloatPair;
 import spark.Request;
+import spark.Route;
 
 import javax.servlet.MultipartConfigElement;
 import javax.servlet.ServletException;
@@ -45,46 +46,76 @@ import static spark.debug.DebugScreen.enableDebugScreen;
 
 public class Main {
 
-    private static String TRAINING_IMAGES_PATH_PART0 = "/Users/paulochang/Downloads/sketch-to-code/images/dataset_part0";
-    private static String TRAINER_DATA_FILE_PATH_PART0 = "/Users/paulochang/Downloads/sketch-to-code/training_data_files/trainer_part0.dat";
+    //Part0: numGroup=2, numTraining=3, numTesting=3, number=5
+    //Part1: numGroup=3, numTraining=3, numTesting=3, number=7
+    //Part2: numGroup=3, numTraining=6, numTesting=6, number=12
 
-    private static String TRAINING_IMAGES_PATH_PART1 = "/Users/paulochang/Downloads/sketch-to-code/images/dataset_part1";
-    private static String TRAINER_DATA_FILE_PATH_PART1 = "/Users/paulochang/Downloads/sketch-to-code/training_data_files/trainer_part1.dat";
 
-    private static String TRAINING_IMAGES_PATH_PART2 = "/Users/paulochang/Downloads/sketch-to-code/images/dataset_part2";
-    private static String TRAINER_DATA_FILE_PATH_PART2 = "/Users/paulochang/Downloads/sketch-to-code/training_data_files/trainer_part2.dat";
+    private static final String BASE_PATH = "/Users/paulochang/Downloads/sketch-to-code";
+    private static final String IMAGES_PATH = BASE_PATH + "/images";
+    private static final String DAT_FILE_PATH = BASE_PATH + "/training_data_files";
+    private static final File UPLOAD_DIRECTORY = new File("upload");
+
+    private static final Route formRoute = (req, res) ->
+            "<form method='post' enctype='multipart/form-data'>" // note the enctype
+                    + "    <input type='file' name='uploaded_file' accept='.png'>" // make sure to call getPart using the same "name" in the post
+                    + "    <button>Upload picture</button>"
+                    + "</form>";
+
+
+
+    private static final String ROUTE_PART0 = "/header";
+    private static final String TRAINING_IMAGES_PATH_PART0 = IMAGES_PATH + "/dataset_part0";
+    private static final String TRAINER_DATA_FILE_PATH_PART0 = DAT_FILE_PATH + "/trainer_part0.dat";
+
+    private static final String ROUTE_PART1 = "/stage";
+    private static final String TRAINING_IMAGES_PATH_PART1 = IMAGES_PATH + "/dataset_part1";
+    private static final String TRAINER_DATA_FILE_PATH_PART1 = DAT_FILE_PATH + "/trainer_part1.dat";
+
+    private static final String ROUTE_PART2 = "/tesaserlist";
+    private static final String TRAINING_IMAGES_PATH_PART2 = IMAGES_PATH + "/dataset_part1";
+    private static final String TRAINER_DATA_FILE_PATH_PART2 = DAT_FILE_PATH + "/trainer_part1.dat";
+
+    public static final ConfigObject[] CONFIG_ARRAYS = {
+            new ConfigObject(ROUTE_PART0, TRAINING_IMAGES_PATH_PART0, TRAINER_DATA_FILE_PATH_PART0),
+            new ConfigObject(ROUTE_PART1, TRAINING_IMAGES_PATH_PART1, TRAINER_DATA_FILE_PATH_PART1),
+            new ConfigObject(ROUTE_PART2, TRAINING_IMAGES_PATH_PART2, TRAINER_DATA_FILE_PATH_PART2),
+    };
+
 
 
     public static void main(String[] args) {
         enableDebugScreen();
 
-        File uploadDir = new File("upload");
-        uploadDir.mkdir(); // create the upload directory if it doesn't exist
+        UPLOAD_DIRECTORY.mkdir(); // create the upload directory if it doesn't exist
 
         staticFiles.externalLocation("upload");
 
-        get("/header", (req, res) ->
-                "<form method='post' enctype='multipart/form-data'>" // note the enctype
-                        + "    <input type='file' name='uploaded_file' accept='.png'>" // make sure to call getPart using the same "name" in the post
-                        + "    <button>Upload picture</button>"
-                        + "</form>"
+        for (int i = 0; i < CONFIG_ARRAYS.length; i++) {
+            setupRoutes(CONFIG_ARRAYS[i]);
+        }
+
+    }
+
+    private static void setupRoutes(ConfigObject currentConfig) {
+        get(currentConfig.getRoute(), formRoute
         );
 
-        post("/header", (req, res) -> {
+        post(currentConfig.getRoute(), (req, res) -> {
 
-            Path tempFile = Files.createTempFile(uploadDir.toPath(), "", "");
+            Path tempFile = Files.createTempFile(UPLOAD_DIRECTORY.toPath(), "", "");
 
             req.attribute("org.eclipse.jetty.multipartConfig", new MultipartConfigElement("/temp"));
 
 
             LiblinearAnnotator<FImage, String> trainer = null;
-            File inputDataFile = new File(TRAINER_DATA_FILE_PATH_PART0);
+            File inputDataFile = new File(currentConfig.getTrainerDataFile());                                           //TRAINER_DATA_FILE_PATH_PART0
             if (inputDataFile.isFile()) {
                 trainer = IOUtils.readFromFile(inputDataFile);
             } else {
                 VFSGroupDataset<FImage> allData = null;
                 allData = new VFSGroupDataset<FImage>(
-                        TRAINING_IMAGES_PATH_PART0,
+                        currentConfig.getTrainingImagesPath(),                                                                 //TRAINING_IMAGES_PATH_PART0
                         ImageUtilities.FIMAGE_READER);
 
                 GroupedDataset<String, ListDataset<FImage>, FImage> data =
@@ -113,13 +144,13 @@ public class Main {
                 Date start = new Date();
                 System.out.println("Classifier training: start");
                 trainer.train(splits.getTrainingDataset());
-                File f = new File(TRAINER_DATA_FILE_PATH_PART0);
+                    File f = new File(currentConfig.getTrainerDataFile());                                                //TRAINER_DATA_FILE_PATH_PART0
                 if (!f.getParentFile().exists())
                     f.getParentFile().mkdirs();
                 if (!f.exists())
                     f.createNewFile();
 
-                IOUtils.writeToFile(trainer, new File(TRAINER_DATA_FILE_PATH_PART0));
+                IOUtils.writeToFile(trainer, new File(currentConfig.getTrainerDataFile()));                               //TRAINER_DATA_FILE_PATH_PART0
                 System.out.println("Classifier training: end");
                 Date end = new Date();
                 long durationSec = (end.getTime() - start.getTime()) / 1000;
@@ -141,7 +172,6 @@ public class Main {
             }
 
         });
-
     }
 
     // methods used for logging
