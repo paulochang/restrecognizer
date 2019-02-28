@@ -58,9 +58,6 @@ public class Main {
                     + "    <button>Upload picture</button>"
                     + "</form>";
 
-    //Part0: numGroup=2, numTraining=3, numTesting=3, number=5
-    //Part1: numGroup=3, numTraining=3, numTesting=3, number=7
-    //Part2: numGroup=3, numTraining=6, numTesting=6, number=12
 
     private static final String ROUTE_PART0 = "/header";
     private static final String TRAINING_IMAGES_PATH_PART0 = IMAGES_PATH + "/dataset_part0";
@@ -80,8 +77,8 @@ public class Main {
     private static final int PART1_NUMBER = 7;
 
     private static final String ROUTE_PART2 = "/tesaserlist";
-    private static final String TRAINING_IMAGES_PATH_PART2 = IMAGES_PATH + "/dataset_part1";
-    private static final String TRAINER_DATA_FILE_PATH_PART2 = DAT_FILE_PATH + "/trainer_part1.dat";
+    private static final String TRAINING_IMAGES_PATH_PART2 = IMAGES_PATH + "/dataset_part2";
+    private static final String TRAINER_DATA_FILE_PATH_PART2 = DAT_FILE_PATH + "/trainer_part2.dat";
     private static final int PART2_NUMGROUP = 3;
     private static final int PART2_NUMTRAINING = 6;
     private static final int PART2_NUMTESTING = 6;
@@ -198,7 +195,7 @@ public class Main {
                 final ClassificationResult<String> classificationResult = trainer.classify(query);
                 System.out.println("scoredAnnotations: " + scoredAnnotations);
                 System.out.println("classificationResult: " + classificationResult.getPredictedClasses());
-                return "<h1>Scored annotations :<h1> <p>" + scoredAnnotations + "</p> <h1>classificationResult :<h1> <p>" + classificationResult.getPredictedClasses() + "</p>";
+                return "{ endpoint: "+ currentConfig.getRoute().substring(1) +", classification:"+ classificationResult.getPredictedClasses().iterator().next() + "}";
 
             }
 
