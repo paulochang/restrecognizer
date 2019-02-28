@@ -46,10 +46,6 @@ import static spark.debug.DebugScreen.enableDebugScreen;
 
 public class Main {
 
-    //Part0: numGroup=2, numTraining=3, numTesting=3, number=5
-    //Part1: numGroup=3, numTraining=3, numTesting=3, number=7
-    //Part2: numGroup=3, numTraining=6, numTesting=6, number=12
-
 
     private static final String BASE_PATH = "/Users/paulochang/Downloads/sketch-to-code";
     private static final String IMAGES_PATH = BASE_PATH + "/images";
@@ -62,24 +58,59 @@ public class Main {
                     + "    <button>Upload picture</button>"
                     + "</form>";
 
-
+    //Part0: numGroup=2, numTraining=3, numTesting=3, number=5
+    //Part1: numGroup=3, numTraining=3, numTesting=3, number=7
+    //Part2: numGroup=3, numTraining=6, numTesting=6, number=12
 
     private static final String ROUTE_PART0 = "/header";
     private static final String TRAINING_IMAGES_PATH_PART0 = IMAGES_PATH + "/dataset_part0";
     private static final String TRAINER_DATA_FILE_PATH_PART0 = DAT_FILE_PATH + "/trainer_part0.dat";
+    private static final int PART0_NUMGROUP = 2;
+    private static final int PART0_NUMTRAINING = 3;
+    private static final int PART0_NUMTESTING = 3;
+    private static final int PART0_NUMBER = 5;
+
 
     private static final String ROUTE_PART1 = "/stage";
     private static final String TRAINING_IMAGES_PATH_PART1 = IMAGES_PATH + "/dataset_part1";
     private static final String TRAINER_DATA_FILE_PATH_PART1 = DAT_FILE_PATH + "/trainer_part1.dat";
+    private static final int PART1_NUMGROUP = 3;
+    private static final int PART1_NUMTRAINING = 3;
+    private static final int PART1_NUMTESTING = 3;
+    private static final int PART1_NUMBER = 7;
 
     private static final String ROUTE_PART2 = "/tesaserlist";
     private static final String TRAINING_IMAGES_PATH_PART2 = IMAGES_PATH + "/dataset_part1";
     private static final String TRAINER_DATA_FILE_PATH_PART2 = DAT_FILE_PATH + "/trainer_part1.dat";
+    private static final int PART2_NUMGROUP = 3;
+    private static final int PART2_NUMTRAINING = 6;
+    private static final int PART2_NUMTESTING = 6;
+    private static final int PART2_NUMBER = 12;
 
     public static final ConfigObject[] CONFIG_ARRAYS = {
-            new ConfigObject(ROUTE_PART0, TRAINING_IMAGES_PATH_PART0, TRAINER_DATA_FILE_PATH_PART0),
-            new ConfigObject(ROUTE_PART1, TRAINING_IMAGES_PATH_PART1, TRAINER_DATA_FILE_PATH_PART1),
-            new ConfigObject(ROUTE_PART2, TRAINING_IMAGES_PATH_PART2, TRAINER_DATA_FILE_PATH_PART2),
+            new ConfigObject(ROUTE_PART0,
+                    TRAINING_IMAGES_PATH_PART0,
+                    TRAINER_DATA_FILE_PATH_PART0,
+                    PART0_NUMGROUP,
+                    PART0_NUMTRAINING,
+                    PART0_NUMTESTING,
+                    PART0_NUMBER),
+
+            new ConfigObject(ROUTE_PART1,
+                    TRAINING_IMAGES_PATH_PART1,
+                    TRAINER_DATA_FILE_PATH_PART1,
+                    PART1_NUMGROUP,
+                    PART1_NUMTRAINING,
+                    PART1_NUMTESTING,
+                    PART1_NUMBER),
+
+            new ConfigObject(ROUTE_PART2,
+                    TRAINING_IMAGES_PATH_PART2,
+                    TRAINER_DATA_FILE_PATH_PART2,
+                    PART2_NUMGROUP,
+                    PART2_NUMTRAINING,
+                    PART2_NUMTESTING,
+                    PART2_NUMBER),
     };
 
 
@@ -119,17 +150,17 @@ public class Main {
                         ImageUtilities.FIMAGE_READER);
 
                 GroupedDataset<String, ListDataset<FImage>, FImage> data =
-                        GroupSampler.sample(allData, 2, false);
+                        GroupSampler.sample(allData, currentConfig.getNumGroup(), false);
 
                 GroupedRandomSplitter<String, FImage> splits =
-                        new GroupedRandomSplitter<String, FImage>(data, 3, 0, 3); // 15 training, 15 testing
+                        new GroupedRandomSplitter<String, FImage>(data, currentConfig.getNumTraining(), 0, currentConfig.getNumTesting()); // 15 training, 15 testing
 
 
                 DenseSIFT denseSIFT = new DenseSIFT(5, 7);
                 PyramidDenseSIFT<FImage> pyramidDenseSIFT = new PyramidDenseSIFT<FImage>(denseSIFT, 6f, 7);
 
                 GroupedDataset<String, ListDataset<FImage>, FImage> sample =
-                        GroupedUniformRandomisedSampler.sample(splits.getTrainingDataset(), 5);
+                        GroupedUniformRandomisedSampler.sample(splits.getTrainingDataset(), currentConfig.getNumber());
 
                 HardAssigner<byte[], float[], IntFloatPair> assigner = trainQuantiser(sample, pyramidDenseSIFT);
 
