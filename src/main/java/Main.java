@@ -1,44 +1,47 @@
 import de.bwaldvogel.liblinear.SolverType;
 import org.openimaj.data.DataSource;
-import org.openimaj.data.dataset.Dataset;
-import org.openimaj.data.dataset.GroupedDataset;
-import org.openimaj.data.dataset.ListDataset;
-import org.openimaj.data.dataset.VFSGroupDataset;
+import org.openimaj.data.dataset.*;
 import org.openimaj.experiment.dataset.sampling.GroupSampler;
 import org.openimaj.experiment.dataset.sampling.GroupedUniformRandomisedSampler;
 import org.openimaj.experiment.dataset.split.GroupedRandomSplitter;
+import org.openimaj.experiment.evaluation.classification.ClassificationResult;
 import org.openimaj.feature.DoubleFV;
 import org.openimaj.feature.FeatureExtractor;
 import org.openimaj.feature.SparseIntFV;
 import org.openimaj.feature.local.data.LocalFeatureListDataSource;
 import org.openimaj.feature.local.list.LocalFeatureList;
+import org.openimaj.image.FImage;
+import org.openimaj.image.ImageUtilities;
 import org.openimaj.image.feature.dense.gradient.dsift.ByteDSIFTKeypoint;
 import org.openimaj.image.feature.dense.gradient.dsift.DenseSIFT;
 import org.openimaj.image.feature.dense.gradient.dsift.PyramidDenseSIFT;
 import org.openimaj.image.feature.local.aggregate.BagOfVisualWords;
 import org.openimaj.image.feature.local.aggregate.BlockSpatialAggregator;
+import org.openimaj.image.processing.edges.SUSANEdgeDetector;
+import org.openimaj.io.IOUtils;
+import org.openimaj.ml.annotation.ScoredAnnotation;
+import org.openimaj.ml.annotation.linear.LiblinearAnnotator;
 import org.openimaj.ml.clustering.ByteCentroidsResult;
 import org.openimaj.ml.clustering.assignment.HardAssigner;
 import org.openimaj.ml.clustering.kmeans.ByteKMeans;
 import org.openimaj.util.pair.IntFloatPair;
-import spark.*;
-import javax.servlet.*;
-import javax.servlet.http.*;
-import java.io.*;
-import java.nio.file.*;
+import spark.Request;
+
+import javax.servlet.MultipartConfigElement;
+import javax.servlet.ServletException;
+import javax.servlet.http.Part;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import static spark.Spark.*;
-import static spark.debug.DebugScreen.*;
-
-import org.openimaj.experiment.evaluation.classification.ClassificationResult;
-import org.openimaj.image.ImageUtilities;
-import org.openimaj.image.FImage;
-import org.openimaj.io.IOUtils;
-import org.openimaj.ml.annotation.ScoredAnnotation;
-import org.openimaj.ml.annotation.linear.LiblinearAnnotator;
+import static spark.debug.DebugScreen.enableDebugScreen;
 
 public class Main {
 
@@ -50,7 +53,6 @@ public class Main {
 
     private static String TRAINING_IMAGES_PATH_PART2 = "/Users/paulochang/Downloads/sketch-to-code/images/dataset_part2";
     private static String TRAINER_DATA_FILE_PATH_PART2 = "/Users/paulochang/Downloads/sketch-to-code/training_data_files/trainer_part2.dat";
-
 
 
     public static void main(String[] args) {
@@ -75,13 +77,11 @@ public class Main {
             req.attribute("org.eclipse.jetty.multipartConfig", new MultipartConfigElement("/temp"));
 
 
-
             LiblinearAnnotator<FImage, String> trainer = null;
             File inputDataFile = new File(TRAINER_DATA_FILE_PATH_PART0);
             if (inputDataFile.isFile()) {
                 trainer = IOUtils.readFromFile(inputDataFile);
-            } else
-            {
+            } else {
                 VFSGroupDataset<FImage> allData = null;
                 allData = new VFSGroupDataset<FImage>(
                         TRAINING_IMAGES_PATH_PART0,
@@ -130,13 +130,13 @@ public class Main {
                 Files.copy(input, tempFile, StandardCopyOption.REPLACE_EXISTING);
 
 
-            FImage query = ImageUtilities.readF(tempFile.toFile());
+                FImage query = ImageUtilities.readF(tempFile.toFile());
 
-            final List<ScoredAnnotation<String>> scoredAnnotations = trainer.annotate(query);
-            final ClassificationResult<String> classificationResult = trainer.classify(query);
-            System.out.println("scoredAnnotations: " + scoredAnnotations);
-            System.out.println("classificationResult: " + classificationResult.getPredictedClasses());
-            return "<h1>Scored annotations :<h1> <p>" + scoredAnnotations +"</p> <h1>classificationResult :<h1> <p>"+classificationResult.getPredictedClasses()+"</p>";
+                final List<ScoredAnnotation<String>> scoredAnnotations = trainer.annotate(query);
+                final ClassificationResult<String> classificationResult = trainer.classify(query);
+                System.out.println("scoredAnnotations: " + scoredAnnotations);
+                System.out.println("classificationResult: " + classificationResult.getPredictedClasses());
+                return "<h1>Scored annotations :<h1> <p>" + scoredAnnotations + "</p> <h1>classificationResult :<h1> <p>" + classificationResult.getPredictedClasses() + "</p>";
 
             }
 
@@ -160,8 +160,7 @@ public class Main {
 
     static HardAssigner<byte[], float[], IntFloatPair> trainQuantiser(
             Dataset<FImage> sample,
-            PyramidDenseSIFT<FImage> pyramidDenseSIFT)
-    {
+            PyramidDenseSIFT<FImage> pyramidDenseSIFT) {
         System.out.println("trainQuantiser: start");
         Date start = new Date();
         List<LocalFeatureList<ByteDSIFTKeypoint>> allKeys = new ArrayList<LocalFeatureList<ByteDSIFTKeypoint>>();
@@ -190,7 +189,7 @@ public class Main {
         ByteCentroidsResult result = km.cluster(dataSource);
         Date end = new Date();
         System.out.println("trainQuantiser: end");
-        System.out.println("trainQuantiser duration: " + (end.getTime() - start.getTime())/1000 + " seconds");
+        System.out.println("trainQuantiser duration: " + (end.getTime() - start.getTime()) / 1000 + " seconds");
         return result.defaultHardAssigner();
     }
 
@@ -198,8 +197,7 @@ public class Main {
         PyramidDenseSIFT<FImage> pdsift;
         HardAssigner<byte[], float[], IntFloatPair> assigner;
 
-        public PHOWExtractor(PyramidDenseSIFT<FImage> pdsift, HardAssigner<byte[], float[], IntFloatPair> assigner)
-        {
+        public PHOWExtractor(PyramidDenseSIFT<FImage> pdsift, HardAssigner<byte[], float[], IntFloatPair> assigner) {
             this.pdsift = pdsift;
             this.assigner = assigner;
         }
