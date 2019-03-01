@@ -76,7 +76,7 @@ public class Main {
     private static final int PART1_NUMTESTING = 3;
     private static final int PART1_NUMBER = 7;
 
-    private static final String ROUTE_PART2 = "/tesaserlist";
+    private static final String ROUTE_PART2 = "/teaserlist";
     private static final String TRAINING_IMAGES_PATH_PART2 = IMAGES_PATH + "/dataset_part2";
     private static final String TRAINER_DATA_FILE_PATH_PART2 = DAT_FILE_PATH + "/trainer_part2.dat";
     private static final int PART2_NUMGROUP = 3;
@@ -113,6 +113,8 @@ public class Main {
 
 
     public static void main(String[] args) {
+        secure("deploy/keystore.jks", "password", null, null);
+
         enableDebugScreen();
 
         UPLOAD_DIRECTORY.mkdir(); // create the upload directory if it doesn't exist
@@ -123,6 +125,34 @@ public class Main {
             setupRoutes(CONFIG_ARRAYS[i]);
         }
 
+        enableCORS("*", "GET, PUT, POST, DELETE, HEAD", "*");
+
+    }
+
+
+    private static void enableCORS(final String origin, final String methods, final String headers) {
+
+        options("/*",
+                (request, response) -> {
+
+                    String accessControlRequestHeaders = request
+                            .headers("Access-Control-Request-Headers");
+                    if (accessControlRequestHeaders != null) {
+                        response.header("Access-Control-Allow-Headers",
+                                accessControlRequestHeaders);
+                    }
+
+                    String accessControlRequestMethod = request
+                            .headers("Access-Control-Request-Method");
+                    if (accessControlRequestMethod != null) {
+                        response.header("Access-Control-Allow-Methods",
+                                accessControlRequestMethod);
+                    }
+
+                    return "OK";
+                });
+
+        before((request, response) -> response.header("Access-Control-Allow-Origin", "*"));
     }
 
     private static void setupRoutes(ConfigObject currentConfig) {
