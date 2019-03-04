@@ -65,26 +65,26 @@ public class ImprovedMain {
     private static final String TRAINING_IMAGES_PATH_PART0 = IMAGES_PATH + "/dataset_part0";
     private static final String TRAINER_DATA_FILE_PATH_PART0 = DAT_FILE_PATH + "/trainer_part0.dat";
     private static final int PART0_NUMGROUP = 2;
-    private static final int PART0_NUMTRAINING = 3;
-    private static final int PART0_NUMTESTING = 3;
-    private static final int PART0_NUMBER = 5;
+    private static final int PART0_NUMTRAINING = 4;
+    private static final int PART0_NUMTESTING = 4;
+    private static final int PART0_NUMBER = 7;
 
 
     private static final String ROUTE_PART1 = "/stage";
     private static final String TRAINING_IMAGES_PATH_PART1 = IMAGES_PATH + "/dataset_part1";
     private static final String TRAINER_DATA_FILE_PATH_PART1 = DAT_FILE_PATH + "/trainer_part1.dat";
     private static final int PART1_NUMGROUP = 3;
-    private static final int PART1_NUMTRAINING = 3;
-    private static final int PART1_NUMTESTING = 3;
-    private static final int PART1_NUMBER = 7;
+    private static final int PART1_NUMTRAINING = 5;
+    private static final int PART1_NUMTESTING = 5;
+    private static final int PART1_NUMBER = 9;
 
     private static final String ROUTE_PART2 = "/teaserlist";
     private static final String TRAINING_IMAGES_PATH_PART2 = IMAGES_PATH + "/dataset_part2";
     private static final String TRAINER_DATA_FILE_PATH_PART2 = DAT_FILE_PATH + "/trainer_part2.dat";
     private static final int PART2_NUMGROUP = 3;
-    private static final int PART2_NUMTRAINING = 6;
-    private static final int PART2_NUMTESTING = 6;
-    private static final int PART2_NUMBER = 12;
+    private static final int PART2_NUMTRAINING = 10;
+    private static final int PART2_NUMTESTING = 10;
+    private static final int PART2_NUMBER = 15;
 
     public static final ConfigObject[] CONFIG_ARRAYS = {
             new ConfigObject(ROUTE_PART0,
@@ -229,7 +229,7 @@ public class ImprovedMain {
                 final ClassificationResult<String> classificationResult = trainer.classify(query);
                 System.out.println("scoredAnnotations: " + scoredAnnotations);
                 System.out.println("classificationResult: " + classificationResult.getPredictedClasses());
-                return "{ endpoint: "+ currentConfig.getRoute().substring(1) +", classification:"+ classificationResult.getPredictedClasses().iterator().next() + "}";
+                return "{ \"endpoint\": \""+ currentConfig.getRoute().substring(1) +"\", \"classification\":\""+ classificationResult.getPredictedClasses().iterator().next() + "\"}";
 
             }
 

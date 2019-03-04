@@ -225,7 +225,7 @@ public class Main {
                 final ClassificationResult<String> classificationResult = trainer.classify(query);
                 System.out.println("scoredAnnotations: " + scoredAnnotations);
                 System.out.println("classificationResult: " + classificationResult.getPredictedClasses());
-                return "{ endpoint: "+ currentConfig.getRoute().substring(1) +", classification:"+ classificationResult.getPredictedClasses().iterator().next() + "}";
+                return "{ \"endpoint\": \""+ currentConfig.getRoute().substring(1) +"\", \"classification\":\""+ classificationResult.getPredictedClasses().iterator().next() + "\"}";
 
             }
 
