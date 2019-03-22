@@ -48,8 +48,8 @@ import static spark.debug.DebugScreen.enableDebugScreen;
 public class ImprovedMain {
 
     public static final String PNG = ".png";
-
-    private static final String BASE_PATH = "/Users/paulochang/Downloads/sketch_backup";
+    private static final String BASE_PATH = System.getProperty("user.dir") + "/sketch_backup";
+    private static final String KEYSTORE_PATH = System.getProperty("user.dir") + "/deploy/keystore.jks";
     private static final String IMAGES_PATH = BASE_PATH + "/images";
     private static final String DAT_FILE_PATH = BASE_PATH + "/training_data_files";
     private static final File UPLOAD_DIRECTORY = new File("upload");
@@ -115,7 +115,7 @@ public class ImprovedMain {
 
 
     public static void main(String[] args) {
-        secure("deploy/keystore.jks", "password", null, null);
+        secure(KEYSTORE_PATH, "123456", null, null);
 
         enableDebugScreen();
 
