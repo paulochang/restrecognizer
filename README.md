@@ -15,5 +15,18 @@ mvn package
 
 # 3. Start server
 ```
-java -jar target/my-app-1.0-SNAPSHOT-jar-with-dependencies.jar 
+java -cp target/sketch2code-api-1.0-jar-with-dependencies.jar Main
 ```
+
+# 4. Deploy to heroku
+```
+mvn clean heroku:deploy
+```
+
+# 5. URL:
+
+Local (no https):
+http://localhost:4567
+
+Remote:
+https://sketch2code-api.herokuapp.com
