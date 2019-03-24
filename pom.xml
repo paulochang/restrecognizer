@@ -52,9 +52,6 @@
                     <processTypes>
                         <web>java -cp target/sketch2code-api-1.0-jar-with-dependencies.jar Main</web>
                     </processTypes>
-                    <includes>
-                        <include>deploy/keystore.jks</include>
-                    </includes>
                 </configuration>
             </plugin>
         </plugins>
