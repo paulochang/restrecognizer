@@ -53,7 +53,6 @@ public class Main {
     private static final ClassLoader classLoader = Main.class.getClassLoader();
     public static final String PNG = ".png";
     private static final String BASE_PATH = "sketch_backup/";
-
     private static final String IMAGES_PATH = BASE_PATH + "/images";
     private static final String DAT_FILE_PATH = BASE_PATH + "/training_data_files";
     private static final File UPLOAD_DIRECTORY = new File("upload");
