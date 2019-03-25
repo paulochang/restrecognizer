@@ -52,7 +52,7 @@ public class Main {
 
     private static final ClassLoader classLoader = Main.class.getClassLoader();
     public static final String PNG = ".png";
-    private static final String BASE_PATH = classLoader.getResource("sketch_backup").getPath();
+    private static final String BASE_PATH = "sketch_backup/";
     private static final String KEYSTORE_PATH = "/deploy/keystore.jks";
     private static final String IMAGES_PATH = BASE_PATH + "/images";
     private static final String DAT_FILE_PATH = BASE_PATH + "/training_data_files";
