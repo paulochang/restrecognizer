@@ -13,7 +13,8 @@ public class ConfigObject {
         this.trainerDataFile = trainerDataFile;
     }
 
-    public ConfigObject(String route, String trainingImagesPath, String trainerDataFile, int numGroup, int numTraining, int numTesting, int number) {
+    public ConfigObject(String route, String trainingImagesPath, String trainerDataFile, int numGroup, int numTraining, int numTesting,
+                        int number) {
         this.route = route;
         this.trainingImagesPath = trainingImagesPath;
         this.trainerDataFile = trainerDataFile;
