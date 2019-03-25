@@ -40,14 +40,20 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+
+import java.nio.file.Paths;
+import java.net.URL;
 
 import static spark.Spark.*;
 import static spark.debug.DebugScreen.enableDebugScreen;
 
 public class Main {
 
-
-    private static final String BASE_PATH = "/Users/paulochang/Downloads/sketch-to-code";
+    private static final ClassLoader classLoader = Main.class.getClassLoader();
+    public static final String PNG = ".png";
+    private static final String BASE_PATH = classLoader.getResource("sketch_backup").getPath();
+    private static final String KEYSTORE_PATH = "/deploy/keystore.jks";
     private static final String IMAGES_PATH = BASE_PATH + "/images";
     private static final String DAT_FILE_PATH = BASE_PATH + "/training_data_files";
     private static final File UPLOAD_DIRECTORY = new File("upload");
@@ -63,26 +69,26 @@ public class Main {
     private static final String TRAINING_IMAGES_PATH_PART0 = IMAGES_PATH + "/dataset_part0";
     private static final String TRAINER_DATA_FILE_PATH_PART0 = DAT_FILE_PATH + "/trainer_part0.dat";
     private static final int PART0_NUMGROUP = 2;
-    private static final int PART0_NUMTRAINING = 3;
-    private static final int PART0_NUMTESTING = 3;
-    private static final int PART0_NUMBER = 5;
+    private static final int PART0_NUMTRAINING = 4;
+    private static final int PART0_NUMTESTING = 4;
+    private static final int PART0_NUMBER = 7;
 
 
     private static final String ROUTE_PART1 = "/stage";
     private static final String TRAINING_IMAGES_PATH_PART1 = IMAGES_PATH + "/dataset_part1";
     private static final String TRAINER_DATA_FILE_PATH_PART1 = DAT_FILE_PATH + "/trainer_part1.dat";
     private static final int PART1_NUMGROUP = 3;
-    private static final int PART1_NUMTRAINING = 3;
-    private static final int PART1_NUMTESTING = 3;
-    private static final int PART1_NUMBER = 7;
+    private static final int PART1_NUMTRAINING = 5;
+    private static final int PART1_NUMTESTING = 5;
+    private static final int PART1_NUMBER = 9;
 
     private static final String ROUTE_PART2 = "/teaserlist";
     private static final String TRAINING_IMAGES_PATH_PART2 = IMAGES_PATH + "/dataset_part2";
     private static final String TRAINER_DATA_FILE_PATH_PART2 = DAT_FILE_PATH + "/trainer_part2.dat";
     private static final int PART2_NUMGROUP = 3;
-    private static final int PART2_NUMTRAINING = 6;
-    private static final int PART2_NUMTESTING = 6;
-    private static final int PART2_NUMBER = 12;
+    private static final int PART2_NUMTRAINING = 10;
+    private static final int PART2_NUMTESTING = 10;
+    private static final int PART2_NUMBER = 15;
 
     public static final ConfigObject[] CONFIG_ARRAYS = {
             new ConfigObject(ROUTE_PART0,
@@ -110,25 +116,31 @@ public class Main {
                     PART2_NUMBER),
     };
 
-
+    static int getHerokuAssignedPort() {
+        ProcessBuilder processBuilder = new ProcessBuilder();
+        if (processBuilder.environment().get("PORT") != null) {
+            return Integer.parseInt(processBuilder.environment().get("PORT"));
+        }
+        return 4567; //return default port if heroku-port isn't set (i.e. on localhost)
+    }
 
     public static void main(String[] args) {
-        secure("deploy/keystore.jks", "password", null, null);
+        port(getHerokuAssignedPort());
+        // secure(KEYSTORE_PATH, "123456", null, null);
 
         enableDebugScreen();
 
         UPLOAD_DIRECTORY.mkdir(); // create the upload directory if it doesn't exist
 
         staticFiles.externalLocation("upload");
+        staticFiles.location("/public");
 
         for (int i = 0; i < CONFIG_ARRAYS.length; i++) {
             setupRoutes(CONFIG_ARRAYS[i]);
         }
 
         enableCORS("*", "GET, PUT, POST, DELETE, HEAD", "*");
-
     }
-
 
     private static void enableCORS(final String origin, final String methods, final String headers) {
 
@@ -155,6 +167,7 @@ public class Main {
         before((request, response) -> response.header("Access-Control-Allow-Origin", "*"));
     }
 
+
     private static void setupRoutes(ConfigObject currentConfig) {
         get(currentConfig.getRoute(), formRoute
         );
@@ -171,6 +184,8 @@ public class Main {
             if (inputDataFile.isFile()) {
                 trainer = IOUtils.readFromFile(inputDataFile);
             } else {
+                preProcessImages(currentConfig);
+
                 VFSGroupDataset<FImage> allData = null;
                 allData = new VFSGroupDataset<FImage>(
                         currentConfig.getTrainingImagesPath(),                                                                 //TRAINING_IMAGES_PATH_PART0
@@ -183,8 +198,8 @@ public class Main {
                         new GroupedRandomSplitter<String, FImage>(data, currentConfig.getNumTraining(), 0, currentConfig.getNumTesting()); // 15 training, 15 testing
 
 
-                DenseSIFT denseSIFT = new DenseSIFT(5, 7);
-                PyramidDenseSIFT<FImage> pyramidDenseSIFT = new PyramidDenseSIFT<FImage>(denseSIFT, 6f, 7);
+                DenseSIFT denseSIFT = new DenseSIFT(5, 10);
+                PyramidDenseSIFT<FImage> pyramidDenseSIFT = new PyramidDenseSIFT<FImage>(denseSIFT, 6f, 10);
 
                 GroupedDataset<String, ListDataset<FImage>, FImage> sample =
                         GroupedUniformRandomisedSampler.sample(splits.getTrainingDataset(), currentConfig.getNumber());
@@ -202,7 +217,7 @@ public class Main {
                 Date start = new Date();
                 System.out.println("Classifier training: start");
                 trainer.train(splits.getTrainingDataset());
-                    File f = new File(currentConfig.getTrainerDataFile());                                                //TRAINER_DATA_FILE_PATH_PART0
+                File f = new File(currentConfig.getTrainerDataFile());                                                //TRAINER_DATA_FILE_PATH_PART0
                 if (!f.getParentFile().exists())
                     f.getParentFile().mkdirs();
                 if (!f.exists())
@@ -220,6 +235,7 @@ public class Main {
 
 
                 FImage query = ImageUtilities.readF(tempFile.toFile());
+                query = SUSANEdgeDetector.smoothCircularSusan( query, 0.01, 4, 3.4 );
 
                 final List<ScoredAnnotation<String>> scoredAnnotations = trainer.annotate(query);
                 final ClassificationResult<String> classificationResult = trainer.classify(query);
@@ -232,6 +248,39 @@ public class Main {
         });
     }
 
+
+    private static void preProcessImages(ConfigObject currentConfig) throws IOException {
+        VFSGroupDataset<FImage> imageDataset = null;
+        imageDataset = new VFSGroupDataset<FImage>(
+                currentConfig.getTrainingImagesPath(),
+                ImageUtilities.FIMAGE_READER);
+
+        for (final Map.Entry<String, VFSListDataset<FImage>> entry : imageDataset.entrySet()) {
+            String folderPath = currentConfig.getTrainingImagesPath() + File.separator + entry.getKey();
+
+            int i = 0;
+            for (FImage image : entry.getValue()){
+                String imagePath = folderPath + File.separator + i + PNG;
+                ImageUtilities.write(SUSANEdgeDetector.smoothCircularSusan( image, 0.01, 4, 3.4 ), new File(imagePath));
+                i++;
+            }
+            clearOldFilesFromFolder(folderPath);
+        }
+    }
+
+    private static void clearOldFilesFromFolder(String folderPath){
+        //Clear the folder before pre-processing
+        File folder = new File(folderPath);
+        File[] files = folder.listFiles();
+        if(files!=null) { //some JVMs return null for empty dirs
+            for(File f: files) {
+                String filePath = f.getAbsolutePath();
+                if (filePath.substring(filePath.lastIndexOf(File.separator)).contains("part")) {
+                    f.delete();
+                }
+            }
+        }
+    }
     // methods used for logging
     private static void logInfo(Request req, Path tempFile) throws IOException, ServletException {
         System.out.println("Uploaded file '" + getFileName(req.raw().getPart("uploaded_file")) + "' saved as '" + tempFile.toAbsolutePath() + "'");
@@ -264,8 +313,8 @@ public class Main {
             pyramidDenseSIFT.analyseImage(img);
             allKeys.add(pyramidDenseSIFT.getByteKeypoints(0.005f));
         }
-        final int numberOfDenseSiftFeaturesToExtract = 10000;
-        final int numberOfClassesInCluster = 300;
+        final int numberOfDenseSiftFeaturesToExtract = 1000;
+        final int numberOfClassesInCluster = 100;
         if (allKeys.size() > numberOfDenseSiftFeaturesToExtract)
             allKeys = allKeys.subList(0, numberOfDenseSiftFeaturesToExtract);
 
