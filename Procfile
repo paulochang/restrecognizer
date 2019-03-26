@@ -1,1 +1,1 @@
-web: java -cp target/sketch2code-api-1.0-jar-with-dependencies.jar Main
+web: java -cp target/sketch2code-api-1.1-jar-with-dependencies.jar ImprovedMain
