@@ -14,7 +14,7 @@ public class ConfigObject {
     }
 
     public ConfigObject(String route, String trainingImagesPath, String trainerDataFile, int numGroup, int numTraining, int numTesting,
-                        int number) {
+            int number) {
         this.route = route;
         this.trainingImagesPath = trainingImagesPath;
         this.trainerDataFile = trainerDataFile;
