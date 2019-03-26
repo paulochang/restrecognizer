@@ -45,6 +45,11 @@ import java.util.Map;
 import java.nio.file.Paths;
 import java.net.URL;
 
+import org.apache.commons.lang3.StringUtils;
+import java.io.File;
+
+import java.net.URISyntaxException;
+
 import static spark.Spark.*;
 import static spark.debug.DebugScreen.enableDebugScreen;
 
@@ -52,7 +57,8 @@ public class Main {
 
     private static final ClassLoader classLoader = Main.class.getClassLoader();
     public static final String PNG = ".png";
-    private static final String BASE_PATH = "sketch_backup/";
+
+    private static final String BASE_PATH = getBasePath();
     private static final String IMAGES_PATH = BASE_PATH + "/images";
     private static final String DAT_FILE_PATH = BASE_PATH + "/training_data_files";
     private static final File UPLOAD_DIRECTORY = new File("upload");
@@ -88,6 +94,22 @@ public class Main {
     private static final int PART2_NUMTRAINING = 10;
     private static final int PART2_NUMTESTING = 10;
     private static final int PART2_NUMBER = 15;
+
+    public static String getBasePath() {
+        String basePath = "../src/main/resources/sketch_backup/path.txt";
+
+//        URL resource = Main.class.getResource("sketch_backup/path.txt");
+//        System.out.println(resource);
+//
+//        try {
+//            File tempFile = Paths.get(resource.toURI()).toFile();
+//            String filePath = tempFile.getAbsolutePath();
+//            basePath = StringUtils.removeEnd(filePath, "/path.txt");
+//        } catch (URISyntaxException e) {
+//            e.printStackTrace();
+//        }
+        return basePath;
+    }
 
     public static final ConfigObject[] CONFIG_ARRAYS = {
             new ConfigObject(ROUTE_PART0,
