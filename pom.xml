@@ -6,7 +6,7 @@
 
     <groupId>biz.netcentric.sketch2code</groupId>
     <artifactId>sketch2code-api</artifactId>
-    <version>1.0</version>
+    <version>1.1</version>
 
     <name>sketch2code-api</name>
 
@@ -29,7 +29,7 @@
                     </descriptorRefs>
                     <archive>
                         <manifest>
-                            <mainClass>Main</mainClass>
+                            <mainClass>ImprovedMain</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
@@ -50,7 +50,7 @@
                 <configuration>
                     <appName>sketch2code-api</appName>
                     <processTypes>
-                        <web>java -cp target/sketch2code-api-1.0-jar-with-dependencies.jar Main</web>
+                        <web>java -cp target/sketch2code-api-1.1-jar-with-dependencies.jar ImprovedMain</web>
                     </processTypes>
                 </configuration>
             </plugin>
