@@ -96,7 +96,7 @@ public class Main {
     private static final int PART2_NUMBER = 15;
 
     public static String getBasePath() {
-        String basePath = "../src/main/resources/sketch_backup/path.txt";
+        String basePath = "../src/main/resources/sketch_backup";
 
 //        URL resource = Main.class.getResource("sketch_backup/path.txt");
 //        System.out.println(resource);
