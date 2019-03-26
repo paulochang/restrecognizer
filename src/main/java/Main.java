@@ -45,15 +45,18 @@ import java.util.Map;
 import java.nio.file.Paths;
 import java.net.URL;
 
+import org.apache.commons.lang3.StringUtils;
+import java.io.File;
+
+import java.net.URISyntaxException;
+
 import static spark.Spark.*;
 import static spark.debug.DebugScreen.enableDebugScreen;
 
 public class Main {
 
-    private static final ClassLoader classLoader = Main.class.getClassLoader();
     public static final String PNG = ".png";
-    private static final String BASE_PATH = "sketch_backup/";
-    private static final String KEYSTORE_PATH = "/deploy/keystore.jks";
+    private static final String BASE_PATH = "sketch_backup";
     private static final String IMAGES_PATH = BASE_PATH + "/images";
     private static final String DAT_FILE_PATH = BASE_PATH + "/training_data_files";
     private static final File UPLOAD_DIRECTORY = new File("upload");
@@ -126,7 +129,6 @@ public class Main {
 
     public static void main(String[] args) {
         port(getHerokuAssignedPort());
-        // secure(KEYSTORE_PATH, "123456", null, null);
 
         enableDebugScreen();
 
@@ -169,8 +171,7 @@ public class Main {
 
 
     private static void setupRoutes(ConfigObject currentConfig) {
-        get(currentConfig.getRoute(), formRoute
-        );
+        get(currentConfig.getRoute(), formRoute);
 
         post(currentConfig.getRoute(), (req, res) -> {
 
@@ -180,7 +181,10 @@ public class Main {
 
 
             LiblinearAnnotator<FImage, String> trainer = null;
-            File inputDataFile = new File(currentConfig.getTrainerDataFile());                                           //TRAINER_DATA_FILE_PATH_PART0
+            URL resource = Main.class.getResource(currentConfig.getTrainerDataFile());
+            File inputDataFile = Paths.get(resource.toURI()).toFile();
+
+            //File inputDataFile = new File(currentConfig.getTrainerDataFile());                                           //TRAINER_DATA_FILE_PATH_PART0
             if (inputDataFile.isFile()) {
                 trainer = IOUtils.readFromFile(inputDataFile);
             } else {
@@ -217,13 +221,12 @@ public class Main {
                 Date start = new Date();
                 System.out.println("Classifier training: start");
                 trainer.train(splits.getTrainingDataset());
-                File f = new File(currentConfig.getTrainerDataFile());                                                //TRAINER_DATA_FILE_PATH_PART0
-                if (!f.getParentFile().exists())
-                    f.getParentFile().mkdirs();
-                if (!f.exists())
-                    f.createNewFile();
+                if (!inputDataFile.getParentFile().exists())
+                    inputDataFile.getParentFile().mkdirs();
+                if (!inputDataFile.exists())
+                    inputDataFile.createNewFile();
 
-                IOUtils.writeToFile(trainer, new File(currentConfig.getTrainerDataFile()));                               //TRAINER_DATA_FILE_PATH_PART0
+                IOUtils.writeToFile(trainer, inputDataFile);                               //TRAINER_DATA_FILE_PATH_PART0
                 System.out.println("Classifier training: end");
                 Date end = new Date();
                 long durationSec = (end.getTime() - start.getTime()) / 1000;
